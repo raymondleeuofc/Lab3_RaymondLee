@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Book: {% block title %} {{book['title']}} {% endblock %}</h1>
+
+    <table>
+        <tr>
+            <td>ISBN</td>
+            <td>{{book['isbn']}}</td>
+        </tr>
+        <tr>
+            <td>Title</td>
+            <td>{{book['title']}}</td>
+        </tr>
+        <tr>
+            <td>Author</td>
+            <td>{{book['author']}}</td>
+        </tr>
+        <tr>
+            <td>Publication Year</td>
+            <td>{{book['year']}}</td>
+        </tr>
+    </table>
+
+    <h3>AI Summary</h3>
+    
+    <div class="summary">
+        {{summary}}
+    </div>
+
+    <h3>Full Description</h3>
+
+    <div class="description">
+        {{description}}
+    </div>
+
+    <h3>Google Books Ratings</h3>
+
+    <div class="ratings">
+        Ratings count: {{ratingsCount}}, Average rating: {{averageRating}}
+    </div>
+
+    <h3>Reviews</h3>
+
+    <form method="post" action="{{url_for('review')}}">
+        <input type="hidden" name="isbn" value="{{ book['isbn'] }}"></input>
+
+        <div class="form-group">
+            <label for="rating">Your rating:</label>
+            <select name="rating" id="rating">
+                <option value="1">&#9733;</option>
+                <option value="2">&#9733;&#9733;</option>
+                <option value="3">&#9733;&#9733;&#9733;</option>
+                <option value="4">&#9733;&#9733;&#9733;&#9733;</option>
+                <option value="5">&#9733;&#9733;&#9733;&#9733;&#9733;</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <input type="text" name="comment"
+                   placeholder="Post a comment or review here!" class="form-control"
+                   value=""></input>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Post</button>
+        </div>
+    </form>
+
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+
+    <div class="container">
+        {% for review in reviews %}
+        <div class="row">
+            <div class="col">{{review['comment']}}</div>
+            <div class="col">rating: {{review['rating']}}</div>
+            <div class="col">by: {{review['username']}}</div>
+        </div>
+        {% endfor %}
+    </ul>
+
+{% endblock %}

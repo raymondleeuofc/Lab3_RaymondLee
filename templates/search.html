@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Search Books {% endblock %}</h1>
+
+    <form method="get">
+        <div class="form-group">
+            <label for="isbn">ISBN</label>
+            <input type="text" name="isbn"
+                   placeholder="Input the whole ISBN or part" class="form-control"
+                   value="{{ request.args['isbn'] }}"></input>
+
+            <label for="title">Title</label>
+            <input type="text" name="title"
+                   placeholder="Input the whole title or part" class="form-control"
+                   value="{{ request.args['title'] }}"></input>
+
+            <label for="author">Author</label>
+            <input type="text" name="author"
+                   placeholder="Input the whole name of the author or part" class="form-control"
+                   value="{{ request.args['author'] }}"></input>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+
+    <table>
+        <tr>
+            <th>ISBN</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Publication year</th>
+        </tr>
+        {% for book in books %}
+        <tr>
+            <td>
+                <a href="{{ url_for('book', isbn=book['isbn']) }}">
+                    {{book['isbn']}}
+                </a>
+            </td>
+            <td>{{book['title']}}</td>
+            <td>{{book['author']}}</td>
+            <td>{{book['year']}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+
+{% endblock %}
