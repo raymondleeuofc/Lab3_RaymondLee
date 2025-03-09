@@ -1,13 +1,114 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{% block title %} Welcome to SharkShelf! {% endblock %}</h1>
+    <h1>{% block title %} City of Calgary Building Permits {% endblock %}</h1>
 
-    {% for message in get_flashed_messages() %}
-    <div class="alert alert-danger">{{ message }}</div>
-    {% endfor %}
+    <!-- Date range picker -->
 
-	<a class="nav-link" href="{{ url_for('login')}}">Login</a>
-	<a class="nav-link" href="{{ url_for('search')}}">Search</a>
+    <form method="POST">
+        <div class="container">
+            <label for="daterange">Select Date Range:</label>
+            <input type="text" id="daterange" name="daterange" />
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+
+    Results between {{dateFrom}} ~ {{dateTo}}:
+
+    <script>
+        $(document).ready(function() {
+            $('#daterange').daterangepicker({
+                locale: {
+                    format: 'YYYY-MM-DD',
+                    separator: ' '
+                }
+            });
+        });
+    </script>
+
+    <!-- Leaflet Calgary Map -->
+
+    <div id="map" style="width: 1024px; height: 768px;"></div>
+
+    <script>
+        // Load Calgary Map
+    
+        const map = L.map('map').setView([51.0447, -114.0719], 12); // Calgary coord.
+
+        const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // Search Calgary Building Permits data set and add to map. 
+
+        function onEachFeature(feature, layer) {
+            let popupContent = `<p>Building Permit Details:</p>`;
+
+            if (feature.properties && feature.properties.issueddate) {
+                popupContent += `<p>Issue Date: ${feature.properties.issueddate}</p>`;
+            }
+            if (feature.properties && feature.properties.workclassgroup) {
+                popupContent += `<p>Workclass Group: ${feature.properties.workclassgroup}</p>`;
+            }
+            if (feature.properties && feature.properties.contractorname) {
+                popupContent += `<p>Contractor Name: ${feature.properties.contractorname}</p>`;
+            }
+            if (feature.properties && feature.properties.communityname) {
+                popupContent += `<p>Community Name: ${feature.properties.communityname}</p>`;
+            }
+            if (feature.properties && feature.properties.originaladdress) {
+                popupContent += `<p>Original Address: ${feature.properties.originaladdress}</p>`;
+            }
+            layer.bindPopup(popupContent);
+        }
+
+        const geoJsonUrl = "{{geoJsonUrl}}"
+
+        if (geoJsonUrl !== '') {
+
+            async function loadGeoJson() {
+                try {
+                    const response = await fetch(geoJsonUrl);
+                    const data = await response.json();
+                    return data
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            loadGeoJson().then(geoJson => {
+    
+                const markers = [];
+                L.geoJSON(geoJson.features, {
+                    onEachFeature,
+                    pointToLayer: (feature, latlng) => {
+                        const marker = L.marker(latlng);
+                        markers.push(marker);
+                        return marker;
+                    }
+                }).addTo(map);
+
+                // Handles overlapping markers
+                const overlapSpiderfier = new OverlappingMarkerSpiderfier(map);
+
+                // Cluster makers for zoom out
+                const markerClusterGroup = L.markerClusterGroup();
+
+                markers.forEach(marker => {
+                    overlapSpiderfier.addMarker(marker);
+                    markerClusterGroup.addLayer(marker);
+                });
+                
+                overlapSpiderfier.addListener('click', function(marker) {
+                    marker.openPopup();
+                });
+
+                map.addLayer(markerClusterGroup);
+            });
+        }
+    
+    </script>
+
 
 {% endblock %}
